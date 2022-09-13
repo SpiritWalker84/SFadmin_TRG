@@ -1,0 +1,50 @@
+---
+
+- hosts: all
+  become: yes
+  tasks:
+  -  name: Install zabbix on RedHat Family
+     yum:
+        name=zabbix-agent
+        state=latest
+     when:
+        ansible_os_family == "RedHat"
+     notify:
+        zabbix systemd
+  -  name: Install zabbix on Ubuntu
+     apt:
+        name=zabbix-agent
+        state=latest
+     when:
+        ansible_os_family == "Debian"
+     notify:
+        zabbix-agent systemd
+  -  name: Конфиг zabbix-agent
+     lineinfile:
+       path: /etc/zabbix/zabbix_agentd.conf
+       regexp: '^Server'
+       line: 'Server=158.160.8.27'
+       backup: no
+  -  name: Конфиг zabbix-agent-2
+     lineinfile:
+       path: /etc/zabbix/zabbix_agentd.conf
+       regexp: '^ListenPort'
+       line: 'ListenPort=10051'
+       backup: no
+  -  name: Конфиг zabbix-agent-3
+     lineinfile:
+       path: /etc/zabbix/zabbix_agentd.conf
+       regexp: '^Hostname=zabbix-'
+       line: 'Hostname=ubuntu2'
+       backup: no
+    
+
+
+       #        dest=/etc/zabbix/zabbix_agentd.conf regexp='Server' line='Server=158.160.8.27' 
+       #  lineinfile: dest=/etc/zabbix/zabbix_agentd.conf regexp='Hostname' line='Hostname=ubuntu2'
+  handlers:
+  - name: zabbix-agent systemd
+    systemd:
+     name: zabbix-agent.service
+     enabled: yes
+     state: started
